@@ -19,10 +19,17 @@ I left this projects as such. The dipole algo in particular was a continuation o
 That means that particularly the dipole algo is still open to improvements:
 
 - Some scripts and functions require further refactoring to comply with the Norm
-- I went for updating nodes by swifting data instead of the nodes themselves (awful decision)
+- I went for updating nodes by swifting data instead of the nodes themselves (awful decision, I did it to prevent too many frees but it is not sounding for this project)
 - There is still room for making the dipole algo even faster:
   - double moves are still not implemented
   - the final step of bringing the poles into a single sequence on A can have a small improvement
+
+Extras that you might find positive:
+
+- I do my best to keep a sounding architecture
+- I do my best to keep a sounding code
+- I do my best to keep a good tracking of leakings, implement error handling, etc
+- My libft is in full too
 
 # Description of the algos
 
