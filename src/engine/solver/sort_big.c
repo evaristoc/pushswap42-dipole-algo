@@ -80,17 +80,24 @@ int sort_big(t_list *a, t_list *b)
 	int distance_budget;
 	int search;
 
+	// -- bootstrapping --: Pre-loading B with 4 poles to establish the Dipole field.
 	primer(a, b, &meta);
 	update_meta_after_push(b, &meta);
 	while (a->size > 0)
 	{
-		// comparing candidates on top of A
+		// -- cost init --: establishing a baseline for comparing
+		// candidates on A, starting from top
 		cands_init(a->head, 0, &challenger, FROMTOP);
 		distance_choice(b, &challenger, &meta);
 		score_calc(&challenger);
 		distance_budget = challenger.d_score;
 		winner = challenger;
 		search = 1;
+		// branching : there will be two directions to look for challengers
+		// to be pushed from A to B: from top A to bottom, and then from
+		// bottom A to top
+		// -- pruning branch 1 --: don't visit candidates that wont
+		// comply with the base cost / budget (== bound)
 		if (a->head->next)
 		{
 			temp = a->head->next;
@@ -104,8 +111,8 @@ int sort_big(t_list *a, t_list *b)
 				search++;
 			}
 		}
-		// comparing candidates on bottom of A
-		// use data from the winner of the top when checking from bottom
+		// -- pruning branch 2 --: don't visit candidates that wont
+		// comply with the updated cost / budget (== new bound)
 		distance_budget = winner.d_score;
 		search = 1;
 		if (a->tail)

@@ -1,6 +1,6 @@
 #include "engine.h"
 
-int list_push_start(t_list *list, int value, int rank, int direction)
+int list_push_start(t_list *list, int value, int rank, int orientation)
 {
 	t_node *new_node;
 
@@ -11,7 +11,7 @@ int list_push_start(t_list *list, int value, int rank, int direction)
 		return (0);
 	new_node->value = value;
 	new_node->rank = rank;
-	new_node->direction = direction;
+	new_node->orientation = orientation;
 	new_node->next = list->head;
 	new_node->prev = NULL;
 	if (!list->head)
@@ -23,7 +23,7 @@ int list_push_start(t_list *list, int value, int rank, int direction)
 	return (1);
 }
 
-int list_push_end(t_list *list, int value, int rank, int direction)
+int list_push_end(t_list *list, int value, int rank, int orientation)
 {
 	t_node *new_node;
 
@@ -34,7 +34,7 @@ int list_push_end(t_list *list, int value, int rank, int direction)
 		return (0);
 	new_node->value = value;
 	new_node->rank = rank;
-	new_node->direction = direction;
+	new_node->orientation = orientation;
 	new_node->prev = list->tail;
 	new_node->next = NULL;
 	if (!list->tail)
@@ -46,7 +46,7 @@ int list_push_end(t_list *list, int value, int rank, int direction)
 	return (1);
 }
 
-int list_pop_start(t_list *list, int *out_value, int *out_rank, int *out_dir)
+int list_pop_start(t_list *list, int *out_value, int *out_rank, int *out_orient)
 {
 	t_node *old_node;
 
@@ -57,8 +57,8 @@ int list_pop_start(t_list *list, int *out_value, int *out_rank, int *out_dir)
 		*out_value = old_node->value;
 	if (out_rank != NULL)
 		*out_rank = old_node->rank;
-	if (out_dir != NULL)
-		*out_dir = old_node->direction;
+	if (out_orient != NULL)
+		*out_orient = old_node->orientation;
 	list->head = list->head->next;
 	if (list->head == NULL)
 		list->tail = NULL;
@@ -69,7 +69,7 @@ int list_pop_start(t_list *list, int *out_value, int *out_rank, int *out_dir)
 	return (1);
 }
 
-int list_pop_end(t_list *list, int *out_value, int *out_rank, int *out_dir)
+int list_pop_end(t_list *list, int *out_value, int *out_rank, int *out_orient)
 {
 	t_node *old_node;
 
@@ -80,8 +80,8 @@ int list_pop_end(t_list *list, int *out_value, int *out_rank, int *out_dir)
 		*out_value = old_node->value;
 	if (out_rank != NULL)
 		*out_rank = old_node->rank;
-	if (out_dir != NULL)
-		*out_dir = old_node->direction;
+	if (out_orient != NULL)
+		*out_orient = old_node->orientation;
 	list->tail = list->tail->prev;
 	if (list->tail == NULL)
 		list->head = NULL;

@@ -1,130 +1,5 @@
 #include "engine.h"
 
-// static void update_dir(t_list *p)
-// {
-// 	t_node *temp;
-// 	int index;
-
-// 	temp = p->head;
-// 	index = 0;
-// 	while (temp)
-// 	{
-// 		if (index > 2)
-// 			temp->direction = -1;
-// 		temp = temp->next;
-// 	}
-// }
-
-// void primer(t_list *a, t_list *b, t_3gdz_meta *meta)
-// {
-// 	if (a->head->rank > a->tail->rank && a->head->rank > a->head->next->rank)
-// 	{
-// 		p(a, b);
-// 		if (a->head->rank < a->tail->rank)
-// 		{
-// 			rr(a);
-// 			p(a, b);
-// 			p(a, b);
-// 		}
-// 		else
-// 		{
-// 			p(a, b);
-// 			rr(a);
-// 			p(a, b);
-// 		}
-// 	}
-// 	else if (a->head->next->rank > a->tail->rank && a->head->next->rank > a->head->rank)
-// 	{
-// 		swap(a);
-// 		p(a, b);
-// 		if (a->head->rank < a->tail->rank)
-// 		{
-// 			rr(a);
-// 			p(a, b);
-// 			p(a, b);
-// 		}
-// 		else
-// 		{
-// 			p(a, b);
-// 			rr(a);
-// 			p(a, b);
-// 		}
-// 	}
-// 	else if (a->tail->rank > a->head->next->rank && a->tail->rank > a->head->rank)
-// 	{
-// 		rr(a);
-// 		p(a, b);
-// 		if (a->head->rank < a->tail->rank)
-// 		{
-// 			rr(a);
-// 			p(a, b);
-// 			p(a, b);
-// 		}
-// 		else
-// 		{
-// 			p(a, b);
-// 			rr(a);
-// 			p(a, b);
-// 		}
-// 	}
-// 	b->head->direction = -1;
-// 	b->head->next->direction = -1;
-// 	b->tail->direction = -1;
-// 	if (a->head->rank < a->tail->rank && a->head->rank < a->head->next->rank)
-// 	{
-// 		p(a, b);
-// 		if (a->head->rank > a->tail->rank)
-// 		{
-// 			rr(a);
-// 			p(a, b);
-// 			p(a, b);
-// 		}
-// 		else
-// 		{
-// 			p(a, b);
-// 			rr(a);
-// 			p(a, b);
-// 		}
-// 	}
-// 	else if (a->head->next->rank < a->tail->rank && a->head->next->rank < a->head->rank)
-// 	{
-// 		swap(a);
-// 		p(a, b);
-// 		if (a->head->rank > a->tail->rank)
-// 		{
-// 			rr(a);
-// 			p(a, b);
-// 			p(a, b);
-// 		}
-// 		else
-// 		{
-// 			p(a, b);
-// 			rr(a);
-// 			p(a, b);
-// 		}
-// 	}
-// 	else if (a->tail->rank < a->head->next->rank && a->tail->rank < a->head->rank)
-// 	{
-// 		rr(a);
-// 		p(a, b);
-// 		if (a->head->rank > a->head->next->rank)
-// 		{
-// 			swap(a);
-// 			p(a, b);
-// 			p(a, b);
-// 		}
-// 		else
-// 		{
-// 			p(a, b);
-// 			p(a, b);
-// 		}
-// 	}
-// 	b->head->direction = 1;
-// 	b->head->next->direction = 1;
-// 	b->head->next->next->direction = 1;
-// 	update_meta_after_push(b, meta);
-// }
-
 void primer(t_list *a, t_list *b, t_3gdz_meta *meta)
 {
 	if (a->head->rank > a->head->next->rank)
@@ -138,8 +13,8 @@ void primer(t_list *a, t_list *b, t_3gdz_meta *meta)
 		p(a, b);
 		p(a, b);
 	}
-	b->head->direction = -1;
-	b->head->next->direction = -1;
+	b->head->orientation = -1;
+	b->head->next->orientation = -1;
 	if (a->head->rank > a->head->next->rank)
 	{
 		s(a);
@@ -212,18 +87,18 @@ static void find_mins(t_list *a, t_list *b, int *rank)
 	if (a->size == 3)
 		return;
 
-	// 1. THE OPPORTUNITY CHECK
-	// If the next rank is already at one of the 3 points, take it!
+	// if the next rank is already at one of the 3 points, take it!
 	if (a->head->rank == *rank)
 	{
 		push_btwn(a, b);
 		(*rank)++;
-		return (find_mins(a, b, rank)); // RE-EVALUATE state immediately
+		// divide and conquer
+		return (find_mins(a, b, rank)); // re-evaulate state immediately
 	}
 	if (a->head->next->rank == *rank)
 	{
 		swap(a);
-		// Do not rotate! Swap might have put the rank at the head.
+		// Do not rotate! Swap might have put the rank at the head
 		return (find_mins(a, b, rank));
 	}
 	if (a->tail->rank == *rank)
@@ -232,8 +107,7 @@ static void find_mins(t_list *a, t_list *b, int *rank)
 		return (find_mins(a, b, rank));
 	}
 
-	// 2. THE LAST RESORT
-	// Only if the 3 points are exhausted do we turn the wheel.
+	// Only if the 3 points are exhausted do we turn the wheel
 	rotate(a);
 	find_mins(a, b, rank);
 }
