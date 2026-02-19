@@ -24,7 +24,7 @@ That means that particularly the dipole algo is still open to improvements:
   - double moves are still not implemented
   - the final step of bringing the poles into a single sequence on A can have a small improvement
 
-Extras that you might find positive:
+# Extras that you might find positive:
 
 - I do my best to keep a sounding architecture
 - I do my best to keep a sounding code
