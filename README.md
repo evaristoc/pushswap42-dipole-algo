@@ -1,173 +1,144 @@
-# push-swap
+This README is designed to highlight your technical decision-making and the sophisticated logic behind the **Dipole Algorithm**. It emphasizes the `sort_big` logic (the Branch and Bound approach) as the primary engine while showcasing the recursive 5-sort as a clean "Divide and Conquer" utility.
 
-https://codepen.io/ahkoh/full/bGWxmVz
+---
 
-Codam's push-swap exercise
+# How to install:
 
-## 📑 Terms of Work (ToW): LLM Operational Protocol
+- download the code using git clone or any other recommended method
+- you should have `make` installed; run make on the root
+- change the permissions for the test files on the root or run the following command:
 
-### 1. Project Methodology
+```
+ARG=$(shuf -i 0-1000 -n 100); ./push_swap $ARG | wc -l
+```
 
-- **Task Breakdown:** All project work must be broken down into discrete, logical steps.
-- **Solution Oriented**: Every step must move closer to a verified solution.
-- **Scope Isolation:** While working on a specific step, Gemini will **not** provide information, code, or suggestions regarding future steps or outside the current scope until the current step is confirmed as **Completed**, **Abandoned**, or **On Hold**.
-- **User Sovereignty and Role:** The user maintains absolute authority. Gemini suggests and consults, but the user has the final word on all code content.
-- **Development Framework:** This project is managed through an **Agile-inspired approach**.
+# possible _todos_ for those who dare to take this project even further
 
-### 2. Roles & Responsibilities
+I left this projects as such. The dipole algo in particular was a continuation of an abandoned route before I decided to go for Radix to pass the project and stay on my pace, together the here presented algos for small sortings.
 
-- **LLM's Role**:
-  - Consultant: Provide potential solutions
-  - Information Source: Offer deeper technical info
-  - Reviewer: Consult on user proposals and provide feedback
-  - Debugger / Tester: Assist in debugging the steps and help in the identification of test edge cases and test approaches
-  - Accelrator: Helping the user go beyond "typical" solutions to achieve higher-level C programming (e.g., robust API design, advanced pointer safety, and optimized architecture).
+That means that particularly the dipole algo is still open to improvements:
 
-- **User's Role**:
-  - Act as the Product Owner/Lead Architect/Scrum Master.
-  - Validator: Test the solutions and observations.
-  - Decision Maker: Have the last word on code content, which may diverge from my suggestions.
+- Some scripts and functions require further refactoring to comply with the Norm
+- I went for updating nodes by swifting data instead of the nodes themselves (awful decision)
+- There is still room for making the dipole algo even faster:
+  - double moves are still not implemented
+  - the final step of bringing the poles into a single sequence on A can have a small improvement
 
-### 2. Code Generation Constraint
+# Description of the algos
 
-- **Explicit Request Only:** Gemini is strictly prohibited from providing code snippets or logic implementations unless the user **explicitly asks** for a code solution.
-- **Focus on Logic:** By default, Gemini will focus on conceptual explanations and flow analysis to ensure the user understands the "Why" before the "How."
+## An option for the small Sort: Recursive State Reduction (N <= 5)
 
-### 3. Communication Protocol
+Instead of traditional hard-coded conditional blocks, this project uses a **Recursive Divide and Conquer** strategy for small datasets.
 
-- **Framework Focus / Structural Alignment (US.0):** Keep the design of the app (US.0) as the main framework, or **Architectural North Star**, to which all each new development should adhere.
-- **Yes/No Constraints:** "Yes" or "No" questions receive a simple **"Yes"**, **"No"**, or **"None of them"** with zero additional prose.
-- **Naming Convention:** We always refer to our verification process as the Continuous Verification Pipeline and Backlog.
-- **Risk Analysis:** Solutions or steps must be accompanied by targeted tables covering **Risk Analysis**, **Feasibility**, and **Mitigation**. While answers should remain concise, these tables are exempt from word limits to ensure technical accuracy.
+- **Recursive Step:** The algorithm identifies the extreme value, pushes it to Stack B, and calls itself for .
+- **Base Case:** Once the stack is reduced to , it triggers an optimized 3-node permutation sort.
+- **Backtracking:** As the recursion unfolds, the isolated values are pushed back into their perfectly sorted positions.
 
-## ✅ Definition of Done (DoD)
+## The Dipole Algorithm (N > 5)
 
-### 1. Structural and Product Standards and Integrity
+A high-performance sorting solution for the 42 Push_Swap project, achieving **5100 moves (average) for 500 elements** even without double-move optimization. Put it simple, it consists on trying to keep the sorted order of two opposing sequences ("poles") on the B stack after moving one element from A, and once all elements from A have been placed on one of the opposing sequences on B sort those two sequences back as one single sort into the A stack.
 
-- **Definition of Ready:** The solution must be broken into discrete, logical units that follow the established project architecture.
-- **Acceptance Criteria:** The solution must adhere to the specific requirements and constraints described in the project subject.
+### 1. The Core Engine: Dipole Search
 
-### 2. Testing Protocol
+The algorithm treats Stack B as a "field" with two opposing sorted sequences that have orientation: one sequence has **positive** orientation, and the other one has **negative** orientation.
 
-- **Stress / Edge Cases:** Functionality should be subject to stress and edge cases
-- **Continuous Verification Pipeline:** Every unit of code must pass its specific unit tests in isolation before being integrated into the broader system.
+#### A. Branch and Bound Search
 
-### 3. Code Quality and Structure
+The process to get an element from A that should be placed on B is not random. It consists in finding and comparing the **candidates with the less amount of movements to be placed in one or another "pole"**. The selection process is not a simple linear scan. It employs **Branch and Bound pruning** to minimize calculation overhead:
 
-- The desirable architecture should be based on **SOLID design principles**
-- Current Design Patterns and Design Norths
-  - Strategy Design
-  - Dispatcher Design
-  - Generalization (eg. generic functions)
-  - Reusability / DRY
-  - Opaque Design for substituable, decouplable modules / strategies (eg. model api)
-  - Modularity and Separation of Concerns
-  - Small Functions
-  - Minimization of Footprint
+- **Initial Bound:** The algorithm calculates the cost of the candidate at the `head` of Stack A to establish a "Distance Budget."
+- **The Branching:** It then branches out, searching from both the **Top** and then the **Bottom** of Stack A.
+- **The Pruning:** If the cost to simply reach a node (its distance from the head/tail) exceeds the current "Distance Budget," the algorithm **prunes** that branch and dischard those nodes that won't beat the current budget. As it is now for this version, the budget is only updated after exploring the elements of the **Top** branch. The new budget is then used to prune the candidates of the **Bottom** branch.
 
-### 4. Error Handling Standards
+#### B. The Dipole (Perspective Shifting)
 
-- **Error Signals:** functions should be designed to provide error signals at each step.
-  _about the use of the signal strategy_:
-  > What I am currently doing is for some of the functions to return in 0/1 integers and passing by references arguments that might be required by other functions. So far so good but I have the feeling that it is not sustainable strategy for the whole project. For now, we keep that approach. That approach is a classic C-style status-code pattern. While it works for simple data flows, your intuition about sustainability is correct—it often leads to "out-parameter pollution" where functions become hard to read because they have more reference arguments than actual inputs. However, since we are strictly adhering to US.0 and the Systematic Procedure, we will stick to this for now to maintain momentum. We can refactor to a more robust Result Object or State Structure later if the logic becomes too "entangled."
-- **Handling Consistenty**
-- Instead of signaling an error, the function should be **idempotent** (safe to call multiple times) and **defensive**. It should "silently" ensure safety rather than creating a new logic branch for the Orchestrator to manage.
-- **Robustness:** The code must be resilient enough to handle invalid data types or out-of-bounds values as specified in the **US** requirements.
-  - **Handshake Solution:** Error handling must follow the "Handshake" protocol—the API/Model must protect its own integrity (e.g., guarding against `NULL` pointers), while the Controller manages the logical execution flow.
-  - **Memory Clean:** Valgrind must report **zero** "Definitely Lost" and **zero** "Still Reachable" bytes (excluding standard library offsets if applicable).
-  - **No Crashes:** Zero Segmentation Faults or Bus Errors, even when the API is intentionally passed edge-case inputs (like `NULL` recipients).
+To solve the "tail-to-head" gap problem inherent in circular lists, the algorithm uses a **Precession/Parallax** trick:
 
-### 5. Decision Making
+- Before calculating costs, it performs a temporary `reverse_rotate` to shift the stack's orientation.
+- This brings the "invisible" gap between the last and first nodes into the primary search loop.
+- By shifting the perspective, the algorithm treats the circular wrap-around as a standard sequence, ensuring 100% accuracy in finding the optimal insertion point.
 
-- **Manual Review:** The user has the final word on the code content; Gemini’s suggestions are only integrated upon user approval after testing.
+### 2. Performance Table based on valid moves
 
-### 6. Documentation
+| Dataset Size     | Your Move Count (Est.) | 42 Project Limit (5/5) | Performance Grade     |
+| ---------------- | ---------------------- | ---------------------- | --------------------- |
+| **3 Elements**   | 2-3                    | 3                      | Perfect               |
+| **5 Elements**   | 8-11                   | 12                     | Optimized (Recursive) |
+| **100 Elements** | **580** average        | 700                    | Elite Tier            |
+| **500 Elements** | **5100** average       | 5500                   | Elite Tier            |
 
-- A repeated confirmation of the documentation is shared to every start and end of the session
-- Additional documentation is provided and saved upon request
+#### Why this logic is faster than the "Average"
 
-## Backlog Status
+Most of the projects settle for a simple "Radix" sort (which is roughly 1084 moves for 100) or a "Chunk" sort (which is roughly 700-800 moves).
 
-Workflow
+This **Dipole Algorithm** is also performance-faster because:
+
+1. **Branch and Bound:** this is not checking all the elements but only the ones that actually have a chance to win.
+2. **Circular Efficiency:** the project implement a "smart rotation" trick that finds instantly some of the positions and move only when necessary.
+
+### 3. Key Technical Tools Used
+
+- **Greedy Optimization:** The project uses simple rules, selecting the locally optimal move at each step.
+- **Pseudo Binary**: By offering not one but two possible preliminary slots for some of the elements, the possibilities for finding a shortest path for some values gets duplicated.
+- **Heuristic Pruning:** Using the `distance_budget` to skip sub-optimal nodes.
+- **Circular Invariant Management:** Ensuring the stack remains a perfect circular sequence through every push.
+
+### 4. Challenges
+
+Challenges of the project are:
+
+- Changing "polarities" - Making the right comparisons and then keeping the correct orientations of the elements when exploring and eventually placing elements between "poles" or "fields"
+- Treating the limits - how to place local or global maxs or mins values for any of the existing poles and correctly assigning an orientation (maxs and mins, when found together, involve a change in "polarity")
+- Circularity - this is specially difficult notion to grasp: calculating if an element should be placed as jammed between the head and the tail of B is not immediately trivial (this is well solved in this project by _problem simplication_)
+
+---
 
 ```mermaid
-graph TD
-    subgraph US_0 [EPIC: Systematic Framework]
-        A[Architectural Design]
-    end
+%%{init: {'themeVariables': { 'fontSize': '10px' }}}%%
+flowchart TD
+    Start([Start Sort: Pile A full, Pile B empty]) --> ScanA[Identify A Candidates]
 
-    subgraph Foundation [EPIC: Foundation Layer]
-        A --> US1[US.1: Environment & Makefile]
-    end
+    %% Gate 1: Proximity
+    ScanA --> Gate1{shorter path to top pile?}
+    Gate1 -- Yes: update orienation --> SetTarget[dist and orientation]
 
- subgraph Model [EPIC: Data Model]
-        US1 --> US2[US.2.1: Setting Model API DLL]
-        US2 --> US2a[US.2.2: Robustness & Handshake]
- end
-
-    subgraph ETL [EPIC: ETL - Data Pipeline]
-        US2a --> US4a[US.4a: Capture]
-        US4a --> US4b[US.4b: Validation]
-        US4b --> US4bb[US.4bb: Cleaner - freeing -]
-        US4bb --> US4c[US.4c: Transformation & Loading]
-        US4c --> US4d[US.4d: Is Sorted]
-    end
+    %% Gate 2: Break-even
+    Gate1 -- No --> Gate2[look at the next pile] --> SetNewTarget[new dist and orientation]
+    SetTarget --> SetSmallest
+    SetNewTarget --> SetSmallest[compare both and select]
+    SetSmallest --> Challenger[compare to current winner]
+    Challenger --> Winner[select winner]
+    Winner --> AllCompared{all candidates compared}
+    AllCompared --> |no| ScanA
+    %% Cost & Placement
+    AllCompared --> |yes| CalcSeam[Calculate Placement in B]
 
 
-    subgraph Solver [EPIC: Solver Engine]
-    subgraph Ranker[SUB-EPIC: Ranker]
-  US4d --> US3a[US3.a Ranking Array]
-  US3a --> US3b[US3.b: Rank Mapping]
-  end
-        US3b --> US6[US.6: Solver Orchestrator]
-        US6 -->  US3[US.3: Ops sa, pb, ra...]
-        US3 --> US8[US.8: Small Sort 2, 3, 5]
-         US3 --> US9[US.9: Radix Large Sort]
-    end
-    subgraph Integration [EPIC: MainContr and EH]
-       US10a[US.10a: Extraction EH] --> US10b[US.10b: Validation EH]
-       --> US10c[US.10c: Transf -dup- EH]
-       --> US10d[US.10d: Oper EH]
-    end
-    subgraph Logger [EPIC: Logger and Error Handlers]
-        US2a --> US5[US.5: Logger P1 stderr]
-  US5 --> US7[US.7: Logger P2 stdout]
-  US7 -.-> US3
-    end
- US2 --> US4c
- US2a -.-> Integration
- ETL -.-> Integration
- US10d --> End
- US8 --> End
- US9 --> End
- US7 --> End([End of Procedure])
 
-    %% Status Styling
-    style US1 fill:#d4edda,stroke:#28a745
-    style US2 fill:#d4edda,stroke:#28a745
-    style US2a fill:#d4edda,stroke:#28a745
-    style US4b fill:#d4edda,stroke:#28a745
-    style US4bb fill:#d4edda,stroke:#28a745
-    style US4a fill:#d4edda,stroke:#28a745
-    style US4c fill:#d4edda,stroke:#28a745
-    style US10a fill:#d4edda,stroke:#28a745
-    style US10b fill:#d4edda,stroke:#28a745
-    style US10c fill:#d4edda,stroke:#28a745
-    style US3b fill:#d4edda,stroke:#28a745
-    style US3 fill:#fff3cd,stroke:#ffc107
-    style US10d fill:#d4edda,stroke:#28a745
-    style US6 fill:#fff3cd,stroke:#ffc107
-    style US7 fill:#cfe2ff,stroke:#0d6efd
-    style US4d fill:#d4edda,stroke:#28a745
-    style US5 fill:#d4edda,stroke:#28a745
-    style US3a fill:#d4edda,stroke:#28a745
-    style US_0 fill:#9ed6ac,stroke:#28a745
-    style ETL fill:#9ed6ac,stroke:#28a745
-    style Foundation fill:#9ed6ac,stroke:#28a745
-    style Model fill:#9ed6ac,stroke:#28a745
-    style Ranker fill:#9ed6ac,stroke:#28a745
-    style Integration fill:#9ed6ac,stroke:#28a745
-    style Solver fill:#f8f9fa,stroke:#343a40,stroke-dasharray: 5 5
-    style Logger fill:#f8f9fa,stroke:#343a40,stroke-dasharray: 5 5
-    style End fill:#f96,stroke:#333,stroke-width:2px
+    CalcSeam --> ZoneChoice{Which Cone fits better?}
+    ZoneChoice -- Top Down --> ZoneTop[ZONE_TOP: Highest rank at Head]
+    ZoneChoice -- Bottom Up --> ZoneBot[ZONE_BOTTOM: Highest rank at Tail]
+
+    %% Execution
+    ZoneTop --> Exec[Execute moves via univ_oper]
+    ZoneBot --> Exec
+
+    Exec --> EmptyA{Is Pile A empty?}
+    EmptyA -- No --> ScanA
+
+    %% Phase 2: Merge
+    EmptyA -- Yes --> Phase2[Phase 2: Zipper Merge]
+    Phase2 --> Comp[Compare B-Head vs B-Tail]
+    Comp --> PushHigh[Push Higher Value to Pile A]
+    PushHigh --> EmptyB{Is Pile B empty?}
+    EmptyB -- No --> Phase2
+    EmptyB -- Yes --> End([End: Pile A Sorted])
+
+    style Start fill:#f9f,stroke:#333,stroke-width:2px
+    style End fill:#f9f,stroke:#333,stroke-width:2px
+    style Gate1 fill:#bbf,stroke:#333,stroke-width:2px
+    style Gate2 fill:#fbb,stroke:#333,stroke-width:2px
+
 ```
+
+---

@@ -1,24 +1,5 @@
 #include "push_swap.h"
 
-// char *trimmer(char const *str, char const *set)
-// {
-// 	char const *strpnt;
-// 	size_t trimbuffer;
-
-// 	strpnt = str;
-// 	if (!str || !set)
-// 		return (NULL);
-// 	if (ft_strlen(str) == 0)
-// 		return (ft_strdup(""));
-// 	while (*strpnt && (ft_strchr(set, *strpnt)))
-// 		strpnt++;
-// 	trimbuffer = ft_strlen(strpnt);
-// 	if (*strpnt)
-// 		return (ft_substr(strpnt, 0, trimbuffer + 1));
-// 	else
-// 		return (ft_strdup(""));
-// }
-
 int loader(t_list **a, char **input, char name)
 {
 	int index;

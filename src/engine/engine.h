@@ -4,7 +4,7 @@ typedef struct s_node
 {
 	int value;
 	int rank;
-	int direction;
+	int orientation;
 	struct s_node *next;
 	struct s_node *prev;
 } t_node;
@@ -51,8 +51,8 @@ typedef struct s_distances
 {
 	int tp;
 	int bt;
-	int dtp;
-	int dbt;
+	int otp;
+	int obt;
 } t_vec;
 
 typedef struct s_3gdz_meta
