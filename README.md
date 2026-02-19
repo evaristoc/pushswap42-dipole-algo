@@ -5,7 +5,7 @@ This README is designed to highlight the technical decision-making and the sophi
 # How to install:
 
 - download the code using git clone or any other recommended method
-- you should have `make` installed; run make on the root
+- you should have `cmake` and the `cc` compiler installed; run `make` on the root
 - change the permissions for the test files on the root or run the following command:
 
 ```
