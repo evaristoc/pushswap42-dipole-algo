@@ -4,30 +4,35 @@ This README is designed to highlight the technical decision-making and the sophi
 
 # How to install:
 
+- this project runs on linux OS or similar
 - download the code using git clone or any other recommended method
-- you should have `cmake` and the `cc` compiler installed; run `make` on the root
+- you should have `cmake` and the `cc` compiler installed
+- run `make` on the root
+- check that the bash scripts can be run on linux, otherwise convert them from dos to linux format (eg using `dos2unix`); or just make your own tests
 - change the permissions for the test files on the root or run the following command:
 
 ```
 ARG=$(shuf -i 0-1000 -n 100); ./push_swap $ARG | wc -l
 ```
 
-# possible _todos_ for those who dare to take this project even further
+# possible _todos_ for those who dare to take this project to another level
 
-I left this projects as such. The dipole algo in particular was a continuation of an abandoned route before I decided to go for Radix to pass the project and stay on my pace, together the here presented algos for small sortings.
+I left this projects as such. The dipole algo in particular was a continuation of a previously rejected route that was taking a bit long before I decided to go for Radix so I could stay on my pace. Together with Radix, the submitted project included the here presented algos for small sortings.
 
 That means that particularly the dipole algo is still open to improvements:
 
 - Some scripts and functions require further refactoring to comply with the Norm
-- I went for updating nodes by swifting data instead of the nodes themselves (awful decision, I did it to prevent too many frees but it is not sounding for this project)
-- There is still room for making the dipole algo even faster:
+- I went for updating nodes by swifting data instead of the nodes themselves (poor design choice, I did it to prevent too many frees but it is not appropriate for this project)
+- There is still room for making the dipole algo even faster and better:
   - double moves are still not implemented
   - the final step of bringing the poles into a single sequence on A can have a small improvement
 
+The implementation of double moves in particular will take the result closer to a smaller amount of valid steps as well as reduce its variability (read further below).
+
 # Extras that you might find positive:
 
-- I do my best to keep a sounding architecture
-- I do my best to keep a sounding code
+- I do my best to keep a solid architecture
+- I do my best to keep solid code
 - I do my best to keep a good tracking of leakings, implement error handling, etc
 - My libft is in full too
 
@@ -43,7 +48,7 @@ Instead of traditional hard-coded conditional blocks, this project uses a **Recu
 
 ## The Dipole Algorithm (N > 5)
 
-A high-performance sorting solution for the 42 Push_Swap project, achieving **5100 moves (average) for 500 elements** even without double-move optimization. Put it simple, it consists on trying to keep the sorted order of two opposing sequences ("poles") on the B stack after moving one element from A, and once all elements from A have been placed on one of the opposing sequences on B sort those two sequences back as one single sort into the A stack.
+A high-performance sorting solution for the 42 Push_Swap project, achieving **5100 moves (average) for 500 elements** even without double-move optimization. Put simply, it consists of trying to keep the sorted order of two opposing sequences ("poles") on the B stack after moving one element from A, and once all elements from A have been placed on one of the opposing sequences on B sort those two sequences back as one single sort into the A stack.
 
 ### 1. The Core Engine: Dipole Search
 
@@ -55,11 +60,11 @@ The process to get an element from A that should be placed on B is not random. I
 
 - **Initial Bound:** The algorithm calculates the cost of the candidate at the `head` of Stack A to establish a "Distance Budget."
 - **The Branching:** It then branches out, searching from both the **Top** and then the **Bottom** of Stack A.
-- **The Pruning:** If the cost to simply reach a node (its distance from the head/tail) exceeds the current "Distance Budget," the algorithm **prunes** that branch and dischard those nodes that won't beat the current budget. As it is now for this version, the budget is only updated after exploring the elements of the **Top** branch. The new budget is then used to prune the candidates of the **Bottom** branch.
+- **The Pruning:** If the cost to simply reach a node (its distance from the head/tail) exceeds the current "Distance Budget," the algorithm **prunes** that branch and discards those nodes that won't beat the current budget. As it is now for this version, the budget is only updated after exploring the elements of the **Top** branch. The new budget is then used to prune the candidates of the **Bottom** branch.
 
 #### B. The Dipole (Perspective Shifting)
 
-To solve the "tail-to-head" gap problem inherent in circular lists, the algorithm uses a **Precession/Parallax** trick:
+To solve the "tail-to-head" gap problem inherent in circular lists, the algorithm uses a **Perspective Shift technique**:
 
 - Before calculating costs, it performs a temporary `reverse_rotate` to shift the stack's orientation.
 - This brings the "invisible" gap between the last and first nodes into the primary search loop.
@@ -74,11 +79,30 @@ To solve the "tail-to-head" gap problem inherent in circular lists, the algorith
 | **100 Elements** | **580** average        | 700                    | Elite Tier            |
 | **500 Elements** | **5100** average       | 5500                   | Elite Tier            |
 
+The following chart shows the performance of sorting 500 elements averaging the total of 1000 runs:
+
+![histogram of total moves to sort 500 elements; 1000 runs](./histogram500.jpg)
+
+#### Explaining the positive skewness and how to improve it
+
+As it can be seen from the histogram, the algo shows a visible positive skewness. One possible explanation is that for some cases the elements with small ranking are randomly grouped in the middle or lower end of stack A from the beginning.
+
+That force the algo to dig deeper into the stacks.
+
+The following screenshot shows that this algo does a lot of rotate - and reverse rotate moves in order to find the right candidate. Notice the number of rotate and reverse-rotate moves on A compared to same moves on B:
+
+![screenshot a single trial of 500 elements after finishing with sorting](./screenshot500.jpg)
+(_the chart was obtained from [https://codepen.io/ahkoh/full/bGWxmVz](https://codepen.io/ahkoh/full/bGWxmVz); the test used for this specific case is the `test500-steps.sh` script_)
+
+The moves on A are fully related to the sorting on B and they set the limit of what can be coupled as a single move (either `rr` or `rrr`). Not all those moves can be couple as in some cases they occur in opposite directions in each stack.
+
+However, there is still a good chance that the implementation of double moves as valid moves not only could bring the average closer to a smaller number than 5100, but it could also reduce the variability and in particular the skewness seen in the previous graph where no double moves were implemented. I would say that the coupling might result in a reduction of between 5% to 20% moves compared to the single-moves-only implementation.
+
 #### Why this logic is faster than the "Average"
 
 Most of the projects settle for a simple "Radix" sort (which is roughly 1084 moves for 100) or a "Chunk" sort (which is roughly 700-800 moves).
 
-This **Dipole Algorithm** is also performance-faster because:
+This **Dipole Algorithm** is also more performant because:
 
 1. **Branch and Bound:** this is not checking all the elements but only the ones that actually have a chance to win.
 2. **Circular Efficiency:** the project implement a "smart rotation" trick that finds instantly some of the positions and move only when necessary.
@@ -86,7 +110,7 @@ This **Dipole Algorithm** is also performance-faster because:
 ### 3. Key Technical Tools Used
 
 - **Greedy Optimization:** The project uses simple rules, selecting the locally optimal move at each step.
-- **Pseudo Binary**: By offering not one but two possible preliminary slots for some of the elements, the possibilities for finding a shortest path for some values gets duplicated.
+- **Dual-Path Heuristic**: By offering not one but two possible preliminary slots for some of the elements, the possibilities of finding a shortest path for some values doubles.
 - **Heuristic Pruning:** Using the `distance_budget` to skip sub-optimal nodes.
 - **Circular Invariant Management:** Ensuring the stack remains a perfect circular sequence through every push.
 
@@ -94,9 +118,9 @@ This **Dipole Algorithm** is also performance-faster because:
 
 Challenges of the project are:
 
-- Changing "polarities" - Making the right comparisons and then keeping the correct orientations of the elements when exploring and eventually placing elements between "poles" or "fields"
-- Treating the limits - how to place local or global maxs or mins values for any of the existing poles and correctly assigning an orientation (maxs and mins, when found together, involve a change in "polarity")
-- Circularity - this is specially difficult notion to grasp: calculating if an element should be placed as jammed between the head and the tail of B is not immediately trivial (this is well solved in this project by _problem simplication_)
+- **Changing "polarities"** - Making the right comparisons and then keeping the correct orientations of the elements when exploring and eventually placing elements between "poles" or "fields"
+- **Treating the limits** - how to place local or global maxs or mins values for any of the existing poles and correctly assigning an orientation (maxs and mins, when found together, involve a change in "polarity")
+- **Circularity** - this is specially difficult notion to grasp: calculating if an element should be placed as jammed between the head and the tail of B is not immediately trivial (this is well solved in this project by _problem simplification_)
 
 ---
 
