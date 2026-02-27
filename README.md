@@ -15,21 +15,27 @@ This README is designed to highlight the technical decision-making and the sophi
 ARG=$(shuf -i 0-1000 -n 100); ./push_swap $ARG | wc -l
 ```
 
-# possible _todos_ for those who dare to take this project to another level
+# possible todos
 
-I left this projects as such. The dipole algo in particular was a continuation of a previously rejected route that was taking a bit long before I decided to go for Radix so I could stay on my pace. Together with Radix, the submitted project included the here presented algos for small sortings.
+> _for those who are looking for a performing algo which is completely different to the turk, chunk, lis, or radix, and are not scare to take this project to another level_
 
-That means that particularly the dipole algo is still open to improvements:
+I left this project as it was. The **dipole algo** in particular was a continuation of a promising route that I had to abandon in favour of the Radix algo, as my pace expiration date was approaching. The small sorting algos presented here where also presented during the evaluation.
+
+That means that particularly the dipole algo is still open to improvements. For example:
 
 - Some scripts and functions require further refactoring to comply with the Norm
-- I went for updating nodes by swifting data instead of the nodes themselves (poor design choice, I did it to prevent too many frees but it is not appropriate for this project)
-- There is still room for making the dipole algo even faster and better:
-  - double moves are still not implemented
-  - the final step of bringing the poles into a single sequence on A can have a small improvement
+- When modifying the linked list, I chose to update the data stored in the nodes instead of swapping the nodes themselves.
 
-The implementation of double moves in particular will take the result closer to a smaller amount of valid steps as well as reduce its variability (read further below).
+Swapping data instead of the nodes themselves was a poor design choice: I did it to minimize errors associated to leaking but even if it works it is not technically "sounding" for this project. In other words, it is not _good code_. And in fact, switching to swapping the nodes when updating the linked list would likely make this algo run even faster (runtime-wise).
 
-# Extras that you might find positive:
+In terms of **perfomance based on valid moves**, there is also room for improvement, for example:
+
+- the double moves logic is not implemented
+- the final step of bringing the poles into a single sequence on A can have a small improvement
+
+The implementation of double moves, in particular, will definitively result in less valid moves, but it will also reduce its statistic dispersion (see discussion further below).
+
+# Extras that you might find positive when inspecting this project:
 
 - I do my best to keep a solid architecture
 - I do my best to keep solid code
@@ -38,7 +44,7 @@ The implementation of double moves in particular will take the result closer to 
 
 # Description of the algos
 
-## An option for the small Sort: Recursive State Reduction (N <= 5)
+## 1. An option for the small Sort: Recursive State Reduction (N <= 5)
 
 Instead of traditional hard-coded conditional blocks, this project uses a **Recursive Divide and Conquer** strategy for small datasets.
 
@@ -46,9 +52,9 @@ Instead of traditional hard-coded conditional blocks, this project uses a **Recu
 - **Base Case:** Once the stack is reduced to , it triggers an optimized 3-node permutation sort.
 - **Backtracking:** As the recursion unfolds, the isolated values are pushed back into their perfectly sorted positions.
 
-## The Dipole Algorithm (N > 5)
+## 2. The Dipole Algorithm (N > 5)
 
-A high-performance sorting solution for the 42 Push_Swap project, achieving **5100 moves (average) for 500 elements** even without double-move optimization. Put simply, it consists of trying to keep the sorted order of two opposing sequences ("poles") on the B stack after moving one element from A, and once all elements from A have been placed on one of the opposing sequences on B sort those two sequences back as one single sort into the A stack.
+A high-performance sorting solution for the 42 Push_Swap project, achieving **5200 moves (average) for 500 elements** even without double-move optimization. Put simply, it consists of trying to keep the sorted order of two opposing sequences ("poles") on the B stack after moving one element from A, and once all elements from A have been placed on one of the opposing sequences on B sort those two sequences back as one single sort into the A stack.
 
 ### 1. The Core Engine: Dipole Search
 
@@ -72,31 +78,41 @@ To solve the "tail-to-head" gap problem inherent in circular lists, the algorith
 
 ### 2. Performance Table based on valid moves
 
-| Dataset Size     | Your Move Count (Est.) | 42 Project Limit (5/5) | Performance Grade     |
-| ---------------- | ---------------------- | ---------------------- | --------------------- |
-| **3 Elements**   | 2-3                    | 3                      | Perfect               |
-| **5 Elements**   | 8-11                   | 12                     | Optimized (Recursive) |
-| **100 Elements** | **580** average        | 700                    | Elite Tier            |
-| **500 Elements** | **5100** average       | 5500                   | Elite Tier            |
+| Dataset Size     | Dipole Move Count (Est.) | 42 Project Limit (5/5) | Performance Grade     |
+| ---------------- | ------------------------ | ---------------------- | --------------------- |
+| **3 Elements**   | 2-3                      | 3                      | Perfect               |
+| **5 Elements**   | 8-11                     | 12                     | Optimized (Recursive) |
+| **100 Elements** | **580** average          | 700                    | Elite Tier            |
+| **500 Elements** | **5200** average         | 5500                   | Elite Tier            |
 
-The following chart shows the performance of sorting 500 elements averaging the total of 1000 runs:
+The following chart shows the performances (number of moves) of 1000 sortings of sets of 500 random elements:
 
-![histogram of total moves to sort 500 elements; 1000 runs](./histogram500.jpg)
+![dipole algo: histogram of total moves to sort 500 elements; 1000 runs](./dipole_histogram500elems.jpg)
+
+For comparison, I tried the same experiement on a randomly selected [Github project](https://github.com/MariPeshko/push_swap) claiming to implement a "**mechanical turk**" variant, which apparently included double moves. The tests were taking a long time (over 5 minutes) so the run was stopped early. Although only ~330 results were collected, that was enough to indicate a trend.
+
+![turk algo: histogram of total moves to sort 500 elements; 1000 runs](./turk_histogram500elems.jpg)
+
+However, whatever promising, this single comparison might not be fair enough to completely demonstrate the differences between the turk implementations and the dipole algo given possible divergences in student's implementations of the turk algo.
 
 #### Explaining the positive skewness and how to improve it
 
-As it can be seen from the histogram, the algo shows a visible positive skewness. One possible explanation is that for some cases the elements with small ranking are randomly grouped in the middle or lower end of stack A from the beginning.
+As it can be seen from the histogram, the algo shows a visible positive skewness.
 
-That force the algo to dig deeper into the stacks.
+I haven't really studied why. One possible explanation is that for some cases the elements might be by chance grouped in small alternate sequences of small and then larger rank elements across the stack A right from the beginning.
 
-The following screenshot shows that this algo does a lot of rotate - and reverse rotate moves in order to find the right candidate. Notice the number of rotate and reverse-rotate moves on A compared to same moves on B:
+That could force the algo to have jump alternations as it digs deeper into the stacks when finding a significant discrepancy in the characteristics of the candidates.
+
+The following screenshot shows that my dipole algo does a lot of rotate - and reverse rotate moves in order to find the right candidate. Notice the number of rotate and reverse-rotate moves on A compared to same moves on B:
 
 ![screenshot a single trial of 500 elements after finishing with sorting](./screenshot500.jpg)
-(_the chart was obtained from [https://codepen.io/ahkoh/full/bGWxmVz](https://codepen.io/ahkoh/full/bGWxmVz); the test used for this specific case is the `test500-steps.sh` script_)
+(_the chart was obtained from [https://codepen.io/ahkoh/full/bGWxmVz](https://codepen.io/ahkoh/full/bGWxmVz); [this visualizer](https://push-swap42-visualizer.vercel.app/) was also frequently used; the test used for this specific case is the `test500-steps.sh` script_)
 
-The moves on A are fully related to the sorting on B and they set the limit of what can be coupled as a single move (either `rr` or `rrr`). Not all those moves can be couple as in some cases they occur in opposite directions in each stack.
+The moves on A are fully related to the sorting on B and they set the limit of what can be coupled as a single move (either `rr` or `rrr`).
 
-However, there is still a good chance that the implementation of double moves as valid moves not only could bring the average closer to a smaller number than 5100, but it could also reduce the variability and in particular the skewness seen in the previous graph where no double moves were implemented. I would say that the coupling might result in a reduction of between 5% to 20% moves compared to the single-moves-only implementation.
+Not all those moves can be couple: in some cases they occur in opposite directions in each stack. However, there is still a good chance that the implementation of double moves as valid moves not only could bring the average closer to a smaller number than 5200, but it could also reduce the variability and in particular the skewness seen in the previous graph where no double moves were implemented.Based on what I experienced while working on the push_swap project in general, I would say that the move coupling might result in a **reduction of between 5% to 20% moves**. In fact, my hypothesis is that:
+
+> _the higher the deviation (ie. more moves that expected), the higher the effect of the double move reduction._
 
 #### Why this logic is faster than the "Average"
 
