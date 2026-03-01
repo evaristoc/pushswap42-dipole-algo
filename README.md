@@ -59,6 +59,7 @@ A high-performance sorting solution for the 42 Push_Swap project, achieving **52
 ### 1. The Core Engine: Dipole Search
 
 The algorithm treats Stack B as a "field" with two opposing sorted sequences that have orientation: one sequence has **positive** orientation, and the other one has **negative** orientation.
+![dipole algo definitions](./dipole.jpg)
 
 #### A. Branch and Bound Search
 
