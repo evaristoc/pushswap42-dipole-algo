@@ -136,8 +136,10 @@ This **Dipole Algorithm** is also more performant because:
 Challenges of the project are:
 
 - **Changing "polarities"** - Making the right comparisons and then keeping the correct orientations of the elements when exploring and eventually placing elements between "poles" or "fields"
-- **Treating the limits** - how to place local or global maxs or mins values for any of the existing poles and correctly assigning an orientation (maxs and mins, when found together, involve a change in "polarity")
-- **Circularity** - this is specially difficult notion to grasp: calculating if an element should be placed as jammed between the head and the tail of B is not immediately trivial (this is well solved in this project by _problem simplification_)
+- **The horizons** - how to place local or global maxs or mins values for any of the existing poles and correctly assigning an orientation. maxs and mins, when found together, involve a change in "polarity". (I placed the entering max / min element and gave it an orientation based on either _maxmin or minmax rules_, depending of it was a new max or a new min.)
+- **Edges and the Circularity** - this is specially difficult notion to grasp: calculating if an element should be placed as jammed between the head and the tail of B (the _edges_) is not immediately trivial (this is well solved in this project by _problem simplification_)
+
+> _check [this image](./dipole.jpg) again if you need an explanation of the different definitions_
 
 ---
 
