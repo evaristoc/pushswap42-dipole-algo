@@ -52,9 +52,22 @@ Instead of traditional hard-coded conditional blocks, this project uses a **Recu
 - **Base Case:** Once the stack is reduced to , it triggers an optimized 3-node permutation sort.
 - **Backtracking:** As the recursion unfolds, the isolated values are pushed back into their perfectly sorted positions.
 
-## 2. The Dipole Algorithm (N > 5)
+## 2. The Dipole Algorithm - also known as "Hourglass" algo (N > 5)
 
 A high-performance sorting solution for the 42 Push_Swap project, achieving **5200 moves (average) for 500 elements** even without double-move optimization. Put simply, it consists of trying to keep the sorted order of two opposing sequences ("poles") on the B stack after moving one element from A, and once all elements from A have been placed on one of the opposing sequences on B sort those two sequences back as one single sort into the A stack.
+
+The name "dipole" is because the algo relies on the orientation (negative and positive) of the partial sorted sequences in B. The algo is also known as "**hourglass**" due to the disposition of the decreasing and then increasing sequences that should be achieved after exhausting stack A and before sorting back to it from stack B. For example, the values in B shoud be sorted similar to the figure below before re-sorting them back to A:
+
+```
+ \   9   /
+  \  7  /
+   \ 5 /
+    \1/
+    /3\
+   / 4 \
+  /  8  \
+ /  10   \
+```
 
 ### 1. The Core Engine: Dipole Search
 
