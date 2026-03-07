@@ -54,9 +54,9 @@ Instead of traditional hard-coded conditional blocks, this project uses a **Recu
 
 ## 2. The Dipole Algorithm - also known as "Hourglass" algo (N > 5)
 
-A high-performance sorting solution for the 42 Push_Swap project, achieving **5200 moves (average) for 500 elements** even without double-move optimization. Put simply, it consists of trying to keep the sorted order of two opposing sequences ("poles") on the B stack after moving one element from A, and once all elements from A have been placed on one of the opposing sequences on B sort those two sequences back as one single sort into the A stack.
+A high-performance sorting solution for the 42 Push_Swap project, achieving **5200 moves (average) for 500 elements** even without double-move optimization. Put simply, it consists of trying to keep the sorted order of two opposing sequences ("poles") on the stack B after moving one element from stack A, and once all elements from A have been placed on one of the opposing sequences on B, sort those two sequences back as one single sort into the stack A.
 
-The name "dipole" is because the algo relies on the orientation (negative and positive) of the partial sorted sequences in B. The algo is also known as "**hourglass**" due to the disposition of the decreasing and then increasing sequences that should be achieved after exhausting stack A and before sorting back to it from stack B. For example, the values in B shoud be sorted similar to the figure below before re-sorting them back to A:
+The algo is named "**dipole**" because it relies on the _orientation_ (negative and positive) of the partial sorted sequences in stack B. The algo is also known as "**hourglass**" due to the disposition of the decreasing and then increasing sequences that should be achieved after exhausting stack A and before sorting back to it from stack B. For example, the values in B might end in an order similar to the figure below before re-sorting them back to A:
 
 ```
  \   9   /
@@ -71,15 +71,15 @@ The name "dipole" is because the algo relies on the orientation (negative and po
 
 ### 1. The Core Engine: Dipole Search
 
-The algorithm treats Stack B as a "field" with two opposing sorted sequences that have orientation: one sequence has **positive** orientation, and the other one has **negative** orientation.
+The algorithm treats stack B as a "field" with two opposing sorted sequences that have orientation: one sequence has **positive** orientation, and the other one has **negative** orientation.
 ![dipole algo definitions](./dipole.jpg)
 
 #### A. Branch and Bound Search
 
 The process to get an element from A that should be placed on B is not random. It consists in finding and comparing the **candidates with the less amount of movements to be placed in one or another "pole"**. The selection process is not a simple linear scan. It employs **Branch and Bound pruning** to minimize calculation overhead:
 
-- **Initial Bound:** The algorithm calculates the cost of the candidate at the `head` of Stack A to establish a "Distance Budget."
-- **The Branching:** It then branches out, searching from both the **Top** and then the **Bottom** of Stack A.
+- **Initial Bound:** The algorithm calculates the cost of the candidate at the `head` of stack A to establish a "Distance Budget."
+- **The Branching:** It then branches out, searching from both the **Top** and then the **Bottom** of stack A.
 - **The Pruning:** If the cost to simply reach a node (its distance from the head/tail) exceeds the current "Distance Budget," the algorithm **prunes** that branch and discards those nodes that won't beat the current budget. As it is now for this version, the budget is only updated after exploring the elements of the **Top** branch. The new budget is then used to prune the candidates of the **Bottom** branch.
 
 #### B. The Dipole (Perspective Shifting)
@@ -103,11 +103,11 @@ The following chart shows the performances (number of moves) of 1000 sortings of
 
 ![dipole algo: histogram of total moves to sort 500 elements; 1000 runs](./dipole_histogram500elems.jpg)
 
-For comparison, I tried the same experiement on a randomly selected [Github project](https://github.com/MariPeshko/push_swap) claiming to implement a "**mechanical turk**" variant, which apparently included double moves. The tests were taking a long time (over 5 minutes) so the run was stopped early. Although only ~330 results were collected, that was enough to indicate a trend.
+For comparison, I tried the same experiement on a randomly selected [Github project](https://github.com/MariPeshko/push_swap) claiming to implement a "**mechanical turk**" variant, which apparently included double moves. The tests were taking a long time (over 5 minutes) so the run was stopped early, resulting in only ~330 tests collected. Still, that was enough to indicate a trend:
 
 ![turk algo: histogram of total moves to sort 500 elements; 1000 runs](./turk_histogram500elems.jpg)
 
-However, whatever promising, this single comparison might not be fair enough to completely demonstrate the differences between the turk implementations and the dipole algo given possible divergences in student's implementations of the turk algo.
+However, whatever promising, this single comparison might not be fair enough to completely demonstrate the differences between the turk implementations and the dipole / hourglass algo given possible divergences in student's implementations of the turk algo.
 
 #### Explaining the positive skewness and how to improve it
 
@@ -122,9 +122,9 @@ The following screenshot shows that my dipole algo does a lot of rotate - and re
 ![screenshot a single trial of 500 elements after finishing with sorting](./screenshot500.jpg)
 (_the chart was obtained from [https://codepen.io/ahkoh/full/bGWxmVz](https://codepen.io/ahkoh/full/bGWxmVz); [this visualizer](https://push-swap42-visualizer.vercel.app/) was also frequently used; the test used for this specific case is the `test500-steps.sh` script_)
 
-The moves on A are fully related to the sorting on B and they set the limit of what can be coupled as a single move (either `rr` or `rrr`).
+The moves on A are fully related to the sorting on B and they set the limit of what can be coupled as a single double move (either `rr` or `rrr`).
 
-Not all those moves can be couple: in some cases they occur in opposite directions in each stack. However, there is still a good chance that the implementation of double moves as valid moves not only could bring the average closer to a smaller number than 5200, but it could also reduce the variability and in particular the skewness seen in the previous graph where no double moves were implemented.Based on what I experienced while working on the push_swap project in general, I would say that the move coupling might result in a **reduction of between 5% to 20% moves**. In fact, my hypothesis is that:
+Not all those moves could be coupled: in some cases they occur in opposite directions in each stack. However, there is still a good chance that the implementation of double moves as valid moves not only could bring the average closer to a smaller number than 5200, but it could also reduce the variability and in particular the skewness seen in the previous graph where no double moves were implemented.Based on what I experienced while working on the push_swap project in general, I would say that the move coupling might result in a **reduction of between 5% to 20% moves**. In fact, my hypothesis is that:
 
 > _the higher the deviation (ie. more moves that expected), the higher the effect of the double move reduction._
 
@@ -135,12 +135,12 @@ Most of the projects settle for a simple "Radix" sort (which is roughly 1084 mov
 This **Dipole Algorithm** is also more performant because:
 
 1. **Branch and Bound:** this is not checking all the elements but only the ones that actually have a chance to win.
-2. **Circular Efficiency:** the project implement a "smart rotation" trick that finds instantly some of the positions and move only when necessary.
+2. **Circular Efficiency:** the project implement a "smart rotation" trick that finds instantly some of the positions and move only when necessary while evaluating in only one direction - from top to bottom of stack B.
 
 ### 3. Key Technical Tools Used
 
 - **Greedy Optimization:** The project uses simple rules, selecting the locally optimal move at each step.
-- **Dual-Path Heuristic**: By offering not one but two possible preliminary slots for some of the elements, the possibilities of finding a shortest path for some values doubles.
+- **Dual-Path Heuristic**: By offering not one but two possible preliminary slots for some of the elements almost duplicates the possibilities of finding a shortest path for some of the values.
 - **Heuristic Pruning:** Using the `distance_budget` to skip sub-optimal nodes.
 - **Circular Invariant Management:** Ensuring the stack remains a perfect circular sequence through every push.
 
@@ -149,8 +149,8 @@ This **Dipole Algorithm** is also more performant because:
 Challenges of the project are:
 
 - **Changing "polarities"** - Making the right comparisons and then keeping the correct orientations of the elements when exploring and eventually placing elements between "poles" or "fields"
-- **The horizons** - how to place local or global maxs or mins values for any of the existing poles and correctly assigning an orientation. maxs and mins, when found together, involve a change in "polarity". (I placed the entering max / min element and gave it an orientation based on either _maxmin or minmax rules_, depending of it was a new max or a new min.)
-- **Edges and the Circularity** - this is specially difficult notion to grasp: calculating if an element should be placed as jammed between the head and the tail of B (the _edges_) is not immediately trivial (this is well solved in this project by _problem simplification_)
+- **The horizons** - how to place local or global maxs or mins values for any of the existing poles and correctly assigning an orientation. maxs and mins, when found together, involve a change in "polarity". (I placed any entering max / min element with an orientation based on either _maxmin or minmax rules_, depending of it was a new max or a new min.)
+- **Edges and the Circularity** - this is specially difficult notion to grasp: calculating if an element should be placed as jammed between the head and the tail of B (the _edges_) is not immediately trivial (this is well solved in this project by _problem simplification / induction_)
 
 > _check [this image](./dipole.jpg) again if you need an explanation of the different definitions_
 
