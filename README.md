@@ -50,10 +50,73 @@ The dipole algorithm breaks with the chunk idea altogether. It is not about crea
 
 When compared to butterfly or hourglass, the solution I implemented is clever in its design: instead of basing the identification of the sequences on an unknown "pivot" or "pointer" (the chunking value), this algo keep track of the _orientation_ of the two sequences. Although in apperance mentally challenging, this perspective frees the algo from the dependency on the size of either stack A or B to evaluate the most optimal pivots, something that affects chunk-based algorithms a lot, and actually follows much simpler greedy rules that works similarly for all scenarios. In fact, in that particular my algo resembles more the so-called original ["turk" algo](https://medium.com/@ayogun/push-swap-c1f5d2d41e97), even though in my case without swaps, double moves or anything like the "smaller-bigger check".
 
+#### 0. Very Relevant: The Primer
+
+For this algorithm to work properly, we need to first create a **primer** on B. The primer consists in passing first two nodes, ordering them with the smaller rank on top and assigning them _negative orientation_.
+
+Then, we repeat the feat with other two nodes, passing first the one with the smaller rank to later pass the one with the higher rank of those two. Those are assigned _positive orientation_. For example, this is a way a primer should be created:
+
+```
+   \  5  /
+    \ 1 /
+    /-3 \
+   / -4  \
+```
+
+These nodes and _their orientation_ will be key to guide the greedy positioning during the rest of the algo.
+
 #### 1. The Core Engine: Dipole Search
 
 This algo is named "**dipole**" because it relies on the _orientation_ (negative and positive) of the partial sorted sequences in stack B. The algorithm treats stack B as a "field" with two opposing sorted sequences that have orientation: one sequence has **positive** orientation, and the other one has **negative** orientation.
-![dipole algo definitions](./dipole.jpg)
+![dipole algo definitions](./dipole.png)
+
+##### how this works? the `dist_calc` function: one-pass single-direction loop
+
+The logic of searching the right locations on stack B is in the `dist_calc` function. The logic was made efficient enough so the whole search was reduced to a **single pass** from head to tail. That means that the comparisons are always done **in a single direction from head to tail** between a **"current" node** and its **"next node"**. _Always_.
+
+The way this logic was implemented makes a singly linked list enough as a data structure.
+
+> _You will notice that in my project I defined a doubly linked list; that was before refining this algo._
+
+Before starting the comparisons, the first thing is to create a temporary pointer ("candidate") that will register the expected orientations and distances while only presenting to the target nodes in stack B the rank (absolute value) of the candidate from the stack A node.
+
+###### step "0": comparing with "top edge"
+
+The process starts by comparing with the "top edge", against the head of stack B, in order to verify if the entering node should be should be placed as new head of B.
+
+To satisfy this comparison we must evaluate if it can be inserted **between the head _and_ the tail**.
+
+For this project I chose a linked list as data structure. In this data structure the head is not informed about the tail, which might be seen at first as a drawback in my implementation: _how to make those comparisons inside a_ `while` _loop?_. It might be that a coder would try to compare head and tail as separated functions before starting a `while` loop for the comparison against the rest of the nodes in B. However, this implementation logic would take the head / tail comparison out of that `while` loop, increasing the complexity of the implemenation. Other solution could be to use a relatively more complex data structure.
+
+However, we can keep a single `while` loop pass and a single direction (current and its next) comparison using a linked list by a simple trick: to **assign temporarily the tail as head of stack B**. In other words, the comparison should follow a **reverse-rotate on B**. Doing that, the tail will become the "current" node and the head the "next" node without affecting the one-pass single-direction the algo is meant for.
+
+It is important to notice that this move is only for comparison purposes and must be kept **silent**, ie. _without logging it_.
+
+Similarly, whether this "0" position is an assignable place for the candidate or not, it is also required that after the comparison is finished, _the position of the tail must be restored using a_ **silent rotate** _on B_ as it was previous to the edge comparison and before starting any other comparions. _Always_.
+
+In that way the original head becomes restored to head and marked as the "current" node.
+
+![dipole dist_calc function, 01](./dist_calc_01.png)
+
+###### orientations, and digging inside the "poles"
+
+Now, for _all the comparisons_ (including for the "0" step) it is important to keep track of the **orientation**.
+
+Specifically for the cases where the "current" node and the "next" node have the same orientation, the orientation that will be used to calculate location is the one of the "current" node.
+
+This step is fundamental in this algorithm because the comparisons are signed.
+
+To see what happens, if we have three integers higher than 0, `a`, `b` and `c`, and the following comparison is true: `a > b > c`, then the effect of multiplying all those values by -1 results in a shift of the direction of the comparison operators, so now: `-a < -b < -c`. In other words, we will have to consider the orientation of the comparison depending on whether we are in the positive or the negative pole to mantaing the sorted sequence in the way we want it.
+
+![dipole dist_calc function, 02](./dist_calc_02.png)
+
+However, when the signs between the "current" node and its "next" are different it means that we are within a "horizon". Because the signs are different, we can not rely on using signs for the comparison any more, otherwise it will result in inconsistencies in the comparison and discrepancies in the placing of the entering candidate.
+
+Instead, in the horizons we must resource to _absolute values_ only, ie. unsigned. In the horizon case, the "current" and the "next" node become both either mins or maxs to their respective poles, _assuming all ranks of the two poles are compared in absolute values, ie. unsigned_.
+
+If it results that the entering candidate can be placed inside the horizon, the problem that arises is which sign should be assigned. Even if we didn't use the orientation for the comparison, the correct assignment of the sign is crucial: it will properly inform future candidates **between which nodes a change in orientation is now to be found**, so both sequences keep their correct sorting.
+
+For the assignment of the correct sign I used either a minmax or maxmin rule depending if the target nodes were both (unsigned) maxs or (unsigned) mins respectively.
 
 ##### A. Branch and Bound Search
 
